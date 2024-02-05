@@ -47,7 +47,7 @@ func Run(cfg *config.Config) {
 		l.Error(fmt.Sprintf("Got error: %s", err.Error()))
 	}
 
-	l.Info("Shutdown httpServer ...")
+	l.Info("Shutdown httpServer...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := httpServer.Shutdown(ctx); err != nil {
