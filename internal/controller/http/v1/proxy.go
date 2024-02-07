@@ -64,7 +64,7 @@ func (u *ProxyRoutes) createProxy(c *gin.Context) {
 
 type getProxyListRequest struct {
 	Offset int64 `form:"offset" example:"22"`
-	Limit  int64 `form:"limit"  example:"8080"`
+	Limit  int64 `form:"limit,default=20" example:"50"`
 }
 
 func (u *ProxyRoutes) getProxyList(c *gin.Context) {
