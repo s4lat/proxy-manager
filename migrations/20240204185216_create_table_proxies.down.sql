@@ -1,1 +1,2 @@
-DROP TABLE IF EXISTS proxies
+DROP TABLE IF EXISTS proxies_occupies;
+DROP TABLE IF EXISTS proxies;
