@@ -49,3 +49,15 @@ func (u *UseCase) GetProxyById(ctx context.Context, proxyId int64) (domain.Proxy
 
 	return proxy, nil
 }
+
+func (u *UseCase) OccupyMostAvailableProxy(ctx context.Context) (domain.ProxyOccupy, error) {
+	proxyOccupy, err := u.proxyRepo.OccupyMostAvailableProxy(ctx)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return domain.ProxyOccupy{}, err
+		}
+		return domain.ProxyOccupy{}, errors.Join(ErrInRepo, err)
+	}
+
+	return proxyOccupy, nil
+}

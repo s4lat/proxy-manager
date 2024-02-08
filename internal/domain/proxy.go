@@ -38,7 +38,7 @@ type ProxyRepository interface {
 	UpdateProxy(context.Context, Proxy) (Proxy, error)
 	DeleteProxy(context.Context, Proxy) error
 
-	OccupyMostAvailableProxy(ctx context.Context) (Proxy, error)
+	OccupyMostAvailableProxy(ctx context.Context) (ProxyOccupy, error)
 	ReleaseProxy(ctx context.Context, key string) (Proxy, error)
 	AutoCleanupOccupiedProxies(ctx context.Context, expireTime time.Duration)
 }

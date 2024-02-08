@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS proxy(
 );
 
 CREATE TABLE IF NOT EXISTS proxy_occupy (
-    key uuid PRIMARY KEY,
-    create_timestamp DOUBLE PRECISION,
-    proxy_id BIGINT REFERENCES proxy(proxy_id) ON DELETE CASCADE
+    key UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    proxy_id BIGINT REFERENCES proxy(proxy_id) ON DELETE CASCADE,
+    create_timestamp DOUBLE PRECISION
 );
