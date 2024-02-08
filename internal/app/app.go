@@ -29,7 +29,7 @@ func Run(cfg *config.Config) {
 		log.Fatal(err)
 	}
 
-	proxyRepo := repository.NewPostgresProxyRepository(rootCtx, pgxPool)
+	proxyRepo := repository.NewPostgresProxyRepository(pgxPool)
 	u := usecase.New(proxyRepo)
 
 	handler := gin.New()

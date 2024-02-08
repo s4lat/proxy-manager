@@ -15,7 +15,7 @@ type PostgresProxyRepository struct {
 	connPool *pgxpool.Pool
 }
 
-func NewPostgresProxyRepository(ctx context.Context, connPool *pgxpool.Pool) PostgresProxyRepository {
+func NewPostgresProxyRepository(connPool *pgxpool.Pool) PostgresProxyRepository {
 	return PostgresProxyRepository{
 		connPool: connPool,
 	}
