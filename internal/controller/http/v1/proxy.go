@@ -21,11 +21,13 @@ func newProxyRoutes(handler *gin.RouterGroup, u usecase.UseCase, l logger.Interf
 	r := &ProxyRoutes{u: u, l: l}
 
 	handler.POST("/proxies", r.createProxy)
+	handler.GET("/proxies/:proxy_id", r.getProxy)
+	handler.DELETE("/proxies/:proxy_id", r.deleteProxy)
 
 	handler.GET("/proxies", r.getProxyList)
-	handler.GET("/proxies/:proxy_id", r.getProxyById)
 
-	handler.POST("/proxies/occupy", r.OccupyMostAvailableProxy)
+	handler.POST("/proxies/occupy", r.occupyMostAvailableProxy)
+	handler.POST("/proxies/release", r.releaseProxy)
 }
 
 type createProxyRequest struct {
@@ -64,6 +66,50 @@ func (u *ProxyRoutes) createProxy(c *gin.Context) {
 	c.JSON(http.StatusOK, createdProxy)
 }
 
+type getProxyByIdRequest struct {
+	ProxyId int64 `uri:"proxy_id" binding:"required" example:"22"`
+}
+
+func (u *ProxyRoutes) getProxy(c *gin.Context) {
+	var req getProxyByIdRequest
+	if err := c.ShouldBindUri(&req); err != nil {
+		u.l.Error(err.Error(), "http - v1 - getProxy")
+		errorResponse(c, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	proxy, err := u.u.GetProxy(c, req.ProxyId)
+	if err != nil {
+		u.l.Error(err, "http - v1 - getProxy")
+		if errors.Is(err, usecase.ErrNotFound) {
+			errorResponse(c, http.StatusNotFound, "proxy not found")
+		} else {
+			errorResponse(c, http.StatusInternalServerError, "internal server error")
+		}
+		return
+	}
+	c.JSON(http.StatusOK, proxy)
+}
+
+type deleteProxyRequest struct {
+	ProxyId int64 `uri:"proxy_id" binding:"required" example:"22"`
+}
+
+func (u *ProxyRoutes) deleteProxy(c *gin.Context) {
+	var req deleteProxyRequest
+	if err := c.ShouldBindUri(&req); err != nil {
+		u.l.Error(err.Error(), "http - v1 - deleteProxy")
+		errorResponse(c, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	if err := u.u.DeleteProxy(c, req.ProxyId); err != nil {
+		u.l.Error(err.Error(), "http - v1 - deleteProxy")
+		errorResponse(c, http.StatusInternalServerError, "internal server error")
+	}
+	c.Status(http.StatusNoContent)
+}
+
 type getProxyListRequest struct {
 	Offset int64 `form:"offset" example:"22"`
 	Limit  int64 `form:"limit,default=20" example:"50"`
@@ -94,35 +140,10 @@ func (u *ProxyRoutes) getProxyList(c *gin.Context) {
 	c.JSON(http.StatusOK, proxyList)
 }
 
-type getProxyByIdRequest struct {
-	ProxyId int64 `uri:"proxy_id" binding:"required" example:"22"`
-}
-
-func (u *ProxyRoutes) getProxyById(c *gin.Context) {
-	var req getProxyByIdRequest
-	if err := c.ShouldBindUri(&req); err != nil {
-		u.l.Error(err.Error(), "http - v1 - getProxyById")
-		errorResponse(c, http.StatusBadRequest, "invalid request")
-		return
-	}
-
-	proxy, err := u.u.GetProxyById(c, req.ProxyId)
-	if err != nil {
-		u.l.Error(err, "http - v1 - getProxyById")
-		if errors.Is(err, usecase.ErrNotFound) {
-			errorResponse(c, http.StatusNotFound, "proxy not found")
-		} else {
-			errorResponse(c, http.StatusInternalServerError, "internal server error")
-		}
-		return
-	}
-	c.JSON(http.StatusOK, proxy)
-}
-
-func (u *ProxyRoutes) OccupyMostAvailableProxy(c *gin.Context) {
+func (u *ProxyRoutes) occupyMostAvailableProxy(c *gin.Context) {
 	proxyOccupy, err := u.u.OccupyMostAvailableProxy(c)
 	if err != nil {
-		u.l.Error(err.Error(), "http - v1 - OccupyMostAvailableProxy")
+		u.l.Error(err.Error(), "http - v1 - occupyMostAvailableProxy")
 		if errors.Is(err, usecase.ErrNotFound) {
 			errorResponse(c, http.StatusNotFound, "not found any available proxy")
 		} else {
@@ -132,4 +153,23 @@ func (u *ProxyRoutes) OccupyMostAvailableProxy(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, proxyOccupy)
+}
+
+type releaseProxyRequest struct {
+	Key string `json:"key" binding:"required" example:"91af856e-f788-4e83-908e-153399961f35"`
+}
+
+func (u *ProxyRoutes) releaseProxy(c *gin.Context) {
+	var req releaseProxyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		u.l.Error(err.Error(), "http - v1 - releaseProxy")
+		errorResponse(c, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	if err := u.u.ReleaseProxy(c, req.Key); err != nil {
+		u.l.Error(err.Error(), "http - v1 - releaseProxy")
+		errorResponse(c, http.StatusInternalServerError, "internal server error")
+	}
+	c.Status(http.StatusNoContent)
 }

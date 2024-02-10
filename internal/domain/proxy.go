@@ -31,15 +31,14 @@ type ProxyOccupy struct {
 
 type ProxyRepository interface {
 	CreateProxy(ctx context.Context, proxy Proxy) (Proxy, error)
+	GetProxy(ctx context.Context, proxyId int64) (Proxy, error)
+	UpdateProxy(ctx context.Context, updatedProxy Proxy) (Proxy, error)
+	DeleteProxy(ctx context.Context, proxyId int64) error
 
 	GetProxyList(ctx context.Context, offset int64, limit int64) (ProxyList, error)
-	GetProxyById(ctx context.Context, proxyId int64) (Proxy, error)
-
-	UpdateProxy(context.Context, Proxy) (Proxy, error)
-	DeleteProxy(context.Context, Proxy) error
 
 	OccupyMostAvailableProxy(ctx context.Context) (ProxyOccupy, error)
-	ReleaseProxy(ctx context.Context, key string) (Proxy, error)
+	ReleaseProxy(ctx context.Context, key string) error
 	AutoCleanupOccupiedProxies(ctx context.Context, expireTime time.Duration)
 }
 

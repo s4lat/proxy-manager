@@ -65,7 +65,7 @@ func (p PostgresProxyRepository) GetProxyList(ctx context.Context, offset int64,
 	return proxyList, nil
 }
 
-func (p PostgresProxyRepository) GetProxyById(ctx context.Context, proxyId int64) (domain.Proxy, error) {
+func (p PostgresProxyRepository) GetProxy(ctx context.Context, proxyId int64) (domain.Proxy, error) {
 	q := "SELECT proxy.*, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id WHERE proxy.proxy_id = $1 GROUP BY proxy.proxy_id;"
 	rows, _ := p.connPool.Query(ctx, q, proxyId)
 
@@ -84,9 +84,13 @@ func (p PostgresProxyRepository) UpdateProxy(ctx context.Context, proxy domain.P
 	panic("implement me")
 }
 
-func (p PostgresProxyRepository) DeleteProxy(ctx context.Context, proxy domain.Proxy) error {
-	//TODO implement me
-	panic("implement me")
+func (p PostgresProxyRepository) DeleteProxy(ctx context.Context, proxyId int64) error {
+	q := "DELETE FROM proxy WHERE proxy_id=$1;"
+	_, err := p.connPool.Query(ctx, q, proxyId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p PostgresProxyRepository) OccupyMostAvailableProxy(ctx context.Context) (domain.ProxyOccupy, error) {
@@ -141,10 +145,13 @@ func (p PostgresProxyRepository) OccupyMostAvailableProxy(ctx context.Context) (
 	}, nil
 }
 
-func (p PostgresProxyRepository) ReleaseProxy(ctx context.Context, key string) (domain.Proxy, error) {
-	//TODO implement me
-	// Удалает occupy с данным key;
-	panic("implement me")
+func (p PostgresProxyRepository) ReleaseProxy(ctx context.Context, key string) error {
+	q := "DELETE FROM proxy_occupy WHERE key=$1;"
+	_, err := p.connPool.Query(ctx, q, key)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p PostgresProxyRepository) AutoCleanupOccupiedProxies(ctx context.Context, expireTime time.Duration) {
