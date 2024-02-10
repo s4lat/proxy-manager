@@ -41,7 +41,7 @@ type createProxyRequest struct {
 func (u *ProxyRoutes) createProxy(c *gin.Context) {
 	var req createProxyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		u.l.Error(err.Error(), "http - v1 - createProxy")
+		u.l.Error("http - v1 - createProxy - %s", err)
 		errorResponse(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
@@ -54,7 +54,7 @@ func (u *ProxyRoutes) createProxy(c *gin.Context) {
 		Port:     req.Port,
 	})
 	if err != nil {
-		u.l.Error(err.Error(), "http - v1 - createProxy")
+		u.l.Error("http - v1 - createProxy - %s", err)
 		if errors.Is(err, usecase.ErrInvalidData) {
 			errorResponse(c, http.StatusBadRequest, err.Error())
 		} else {
@@ -73,14 +73,14 @@ type getProxyByIdRequest struct {
 func (u *ProxyRoutes) getProxy(c *gin.Context) {
 	var req getProxyByIdRequest
 	if err := c.ShouldBindUri(&req); err != nil {
-		u.l.Error(err.Error(), "http - v1 - getProxy")
+		u.l.Error("http - v1 - getProxy - %s", err)
 		errorResponse(c, http.StatusBadRequest, "invalid request")
 		return
 	}
 
 	proxy, err := u.u.GetProxy(c, req.ProxyId)
 	if err != nil {
-		u.l.Error(err, "http - v1 - getProxy")
+		u.l.Error("http - v1 - getProxy - %s", err)
 		if errors.Is(err, usecase.ErrNotFound) {
 			errorResponse(c, http.StatusNotFound, "proxy not found")
 		} else {
@@ -98,13 +98,13 @@ type deleteProxyRequest struct {
 func (u *ProxyRoutes) deleteProxy(c *gin.Context) {
 	var req deleteProxyRequest
 	if err := c.ShouldBindUri(&req); err != nil {
-		u.l.Error(err.Error(), "http - v1 - deleteProxy")
+		u.l.Error("http - v1 - deleteProxy - %s", err)
 		errorResponse(c, http.StatusBadRequest, "invalid request")
 		return
 	}
 
 	if err := u.u.DeleteProxy(c, req.ProxyId); err != nil {
-		u.l.Error(err.Error(), "http - v1 - deleteProxy")
+		u.l.Error("http - v1 - deleteProxy - %s", err)
 		errorResponse(c, http.StatusInternalServerError, "internal server error")
 	}
 	c.Status(http.StatusNoContent)
@@ -118,14 +118,14 @@ type getProxyListRequest struct {
 func (u *ProxyRoutes) getProxyList(c *gin.Context) {
 	var req getProxyListRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		u.l.Error(err.Error(), "http - v1 - getProxyList")
+		u.l.Error("http - v1 - getProxyList- %s", err)
 		errorResponse(c, http.StatusBadRequest, "invalid request")
 		return
 	}
 
 	proxyList, err := u.u.GetProxyList(c, req.Offset, req.Limit)
 	if err != nil {
-		u.l.Error(err.Error(), "http - v1 - getProxyList")
+		u.l.Error("http - v1 - getProxyList - %s", err)
 		if errors.Is(err, usecase.ErrInvalidData) {
 			errorResponse(c, http.StatusBadRequest, err.Error())
 		} else {
@@ -143,7 +143,7 @@ func (u *ProxyRoutes) getProxyList(c *gin.Context) {
 func (u *ProxyRoutes) occupyMostAvailableProxy(c *gin.Context) {
 	proxyOccupy, err := u.u.OccupyMostAvailableProxy(c)
 	if err != nil {
-		u.l.Error(err.Error(), "http - v1 - occupyMostAvailableProxy")
+		u.l.Error("http - v1 - occupyMostAvailableProxy - %s", err)
 		if errors.Is(err, usecase.ErrNotFound) {
 			errorResponse(c, http.StatusNotFound, "not found any available proxy")
 		} else {
@@ -162,13 +162,13 @@ type releaseProxyRequest struct {
 func (u *ProxyRoutes) releaseProxy(c *gin.Context) {
 	var req releaseProxyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		u.l.Error(err.Error(), "http - v1 - releaseProxy")
+		u.l.Error("http - v1 - releaseProxy - %s", err)
 		errorResponse(c, http.StatusBadRequest, "invalid request")
 		return
 	}
 
 	if err := u.u.ReleaseProxy(c, req.Key); err != nil {
-		u.l.Error(err.Error(), "http - v1 - releaseProxy")
+		u.l.Error("http - v1 - releaseProxy - %s", err)
 		errorResponse(c, http.StatusInternalServerError, "internal server error")
 	}
 	c.Status(http.StatusNoContent)

@@ -8,17 +8,24 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"proxy_manager/internal/domain"
 	"proxy_manager/internal/usecase"
+	"proxy_manager/pkg/logger"
 	"time"
 )
 
 type PostgresProxyRepository struct {
 	connPool *pgxpool.Pool
+	l        logger.Interface
 }
 
-func NewPostgresProxyRepository(connPool *pgxpool.Pool) PostgresProxyRepository {
-	return PostgresProxyRepository{
+func NewPostgresProxyRepository(ctx context.Context, connPool *pgxpool.Pool, occupyExpireTime time.Duration, l logger.Interface) PostgresProxyRepository {
+	ppr := PostgresProxyRepository{
 		connPool: connPool,
+		l:        l,
 	}
+
+	ppr.startExpiredOccupiesCleaner(ctx, occupyExpireTime)
+
+	return ppr
 }
 
 func (p PostgresProxyRepository) CreateProxy(ctx context.Context, proxy domain.Proxy) (domain.Proxy, error) {
@@ -154,9 +161,28 @@ func (p PostgresProxyRepository) ReleaseProxy(ctx context.Context, key string) e
 	return nil
 }
 
-func (p PostgresProxyRepository) AutoCleanupOccupiedProxies(ctx context.Context, expireTime time.Duration) {
-	//TODO implement me
-	// EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) - 5 * 60 > create_timestamp - для сравнения;
-	// чистить каждую минуту.
-	panic("implement me")
+func (p PostgresProxyRepository) startExpiredOccupiesCleaner(ctx context.Context, expireTime time.Duration) {
+	go p.expiredOccupiesCleaner(ctx, expireTime)
+}
+
+func (p PostgresProxyRepository) expiredOccupiesCleaner(ctx context.Context, expireTime time.Duration) {
+	q := "DELETE FROM proxy_occupy WHERE EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) - create_timestamp > $1;"
+
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
+	defer p.l.Info("Expired occupies cleaner exited!")
+	p.l.Info("Started expired occupies cleaner")
+
+	for range ticker.C {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			_, err := p.connPool.Query(ctx, q, expireTime.Seconds())
+			if err != nil {
+				p.l.Error("PostgresProxyRepository - expiredOccupiesCleaner - %s", err)
+			}
+		}
+	}
 }

@@ -29,12 +29,12 @@ func Run(cfg *config.Config) {
 		log.Fatal(err)
 	}
 
-	proxyRepo := repository.NewPostgresProxyRepository(pgxPool)
+	proxyRepo := repository.NewPostgresProxyRepository(rootCtx, pgxPool, time.Minute*time.Duration(cfg.OccupiesExpireTime), l)
 	u := usecase.New(proxyRepo)
 
 	handler := gin.New()
 	v1.NewRouter(handler, u, l)
-	httpServer := serveHttpInBackground(errorChan, handler, fmt.Sprintf(":%s", cfg.Port))
+	httpServer := serveHttpInBackground(errorChan, handler, fmt.Sprintf(":%s", cfg.HttpPort))
 
 	// For graceful shutdown
 	quit := make(chan os.Signal)

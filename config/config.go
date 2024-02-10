@@ -6,10 +6,14 @@ import (
 )
 
 type Config struct {
-	Port            string `env:"PORT" env-default:"9000"`
+	HttpPort string `env:"HTTP_PORT" env-default:"9000"`
+
 	PostgresURL     string `env:"PG_URL" env-required:"true"`
 	PostgresMaxCons int    `env:"PG_MAX_CONS" env-default:"15"`
-	LogLevel        string `env:"LOG_LEVEL" env-default:"info"`
+
+	OccupiesExpireTime int `env:"OCCUPIES_EXPIRE_TIME" env-default:"5"`
+
+	LogLevel string `env:"LOG_LEVEL" env-default:"info"`
 }
 
 func NewConfig() Config {

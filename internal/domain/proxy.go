@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 )
 
 type Proxy struct {
@@ -39,7 +38,6 @@ type ProxyRepository interface {
 
 	OccupyMostAvailableProxy(ctx context.Context) (ProxyOccupy, error)
 	ReleaseProxy(ctx context.Context, key string) error
-	AutoCleanupOccupiedProxies(ctx context.Context, expireTime time.Duration)
 }
 
 func (p *Proxy) Validate() error {
