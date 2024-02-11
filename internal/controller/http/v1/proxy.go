@@ -9,9 +9,6 @@ import (
 	"proxy_manager/pkg/logger"
 )
 
-// TODO:
-//   Прокинуть логгер
-
 type ProxyRoutes struct {
 	u usecase.UseCase
 	l logger.Interface
@@ -21,8 +18,9 @@ func newProxyRoutes(handler *gin.RouterGroup, u usecase.UseCase, l logger.Interf
 	r := &ProxyRoutes{u: u, l: l}
 
 	handler.POST("/proxies", r.createProxy)
-	handler.GET("/proxies/:proxy_id", r.getProxy)
-	handler.DELETE("/proxies/:proxy_id", r.deleteProxy)
+	handler.GET("/proxies/:proxyId", r.getProxy)
+	handler.PUT("/proxies/:proxyId", r.updateProxy)
+	handler.DELETE("/proxies/:proxyId", r.deleteProxy)
 
 	handler.GET("/proxies", r.getProxyList)
 
@@ -66,12 +64,12 @@ func (u *ProxyRoutes) createProxy(c *gin.Context) {
 	c.JSON(http.StatusOK, createdProxy)
 }
 
-type getProxyByIdRequest struct {
-	ProxyId int64 `uri:"proxy_id" binding:"required" example:"22"`
+type getProxyRequest struct {
+	ProxyId int64 `uri:"proxyId" binding:"required" example:"22"`
 }
 
 func (u *ProxyRoutes) getProxy(c *gin.Context) {
-	var req getProxyByIdRequest
+	var req getProxyRequest
 	if err := c.ShouldBindUri(&req); err != nil {
 		u.l.Error("http - v1 - getProxy - %s", err)
 		errorResponse(c, http.StatusBadRequest, "invalid request")
@@ -91,8 +89,55 @@ func (u *ProxyRoutes) getProxy(c *gin.Context) {
 	c.JSON(http.StatusOK, proxy)
 }
 
+type getProxyBeforeUpdateRequest struct {
+	ProxyId int64 `uri:"proxyId" binding:"required" example:"22"`
+}
+
+type updateProxyRequest struct {
+	Protocol string `json:"protocol" binding:"required"  example:"http"`
+	Host     string `json:"host"     binding:"required"  example:"127.0.0.1"`
+	Port     int64  `json:"port"     binding:"required"  example:"8080"`
+	Username string `json:"username" example:"login123"`
+	Password string `json:"password" example:"qwerty1234"`
+}
+
+func (u *ProxyRoutes) updateProxy(c *gin.Context) {
+	var getProxyReq getProxyBeforeUpdateRequest
+	if err := c.ShouldBindUri(&getProxyReq); err != nil {
+		u.l.Error("http - v1 - updateProxy - %s", err)
+		errorResponse(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	var updateProxyReq updateProxyRequest
+	if err := c.ShouldBindJSON(&updateProxyReq); err != nil {
+		u.l.Error("http - v1 - updateProxy - %s", err)
+		errorResponse(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	updatedProxy, err := u.u.UpdateProxy(c, domain.Proxy{
+		Id:       getProxyReq.ProxyId,
+		Protocol: updateProxyReq.Protocol,
+		Username: updateProxyReq.Username,
+		Password: updateProxyReq.Password,
+		Host:     updateProxyReq.Host,
+		Port:     updateProxyReq.Port,
+	})
+	if err != nil {
+		u.l.Error("http - v1 - updateProxy - %s", err)
+		if errors.Is(err, usecase.ErrNotFound) {
+			errorResponse(c, http.StatusNotFound, "proxy not found")
+		} else {
+			errorResponse(c, http.StatusInternalServerError, "internal server error")
+		}
+		return
+	}
+	c.JSON(http.StatusOK, updatedProxy)
+}
+
 type deleteProxyRequest struct {
-	ProxyId int64 `uri:"proxy_id" binding:"required" example:"22"`
+	ProxyId int64 `uri:"proxyId" binding:"required" example:"22"`
 }
 
 func (u *ProxyRoutes) deleteProxy(c *gin.Context) {

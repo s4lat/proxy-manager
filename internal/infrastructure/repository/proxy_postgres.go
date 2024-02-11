@@ -39,6 +39,50 @@ func (p PostgresProxyRepository) CreateProxy(ctx context.Context, proxy domain.P
 	return *createdProxy, nil
 }
 
+func (p PostgresProxyRepository) GetProxy(ctx context.Context, proxyId int64) (domain.Proxy, error) {
+	q := "SELECT proxy.*, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id WHERE proxy.proxy_id = $1 GROUP BY proxy.proxy_id;"
+	rows, _ := p.connPool.Query(ctx, q, proxyId)
+
+	proxy, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[domain.Proxy])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Proxy{}, usecase.ErrNotFound
+		}
+		return domain.Proxy{}, err
+	}
+	return *proxy, nil
+}
+
+func (p PostgresProxyRepository) UpdateProxy(ctx context.Context, proxy domain.Proxy) (domain.Proxy, error) {
+	q1 := "UPDATE proxy SET protocol = $2, username = $3, password = $4,  host = $5, port = $6 WHERE proxy_id = $1 RETURNING *, 0 as occupies_count;"
+	q2 := "DELETE FROM proxy_occupy WHERE proxy_id = $1;"
+
+	rows, _ := p.connPool.Query(ctx, q1, proxy.Id, proxy.Protocol, proxy.Username, proxy.Password, proxy.Host, proxy.Port)
+	updatedProxy, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[domain.Proxy])
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Proxy{}, usecase.ErrNotFound
+		}
+		return domain.Proxy{}, err
+	}
+
+	_, err = p.connPool.Query(ctx, q2, proxy.Id)
+	if err != nil {
+		return domain.Proxy{}, err
+	}
+
+	return *updatedProxy, nil
+}
+
+func (p PostgresProxyRepository) DeleteProxy(ctx context.Context, proxyId int64) error {
+	q := "DELETE FROM proxy WHERE proxy_id=$1;"
+	_, err := p.connPool.Query(ctx, q, proxyId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p PostgresProxyRepository) GetProxyList(ctx context.Context, offset int64, limit int64) (domain.ProxyList, error) {
 	q := "WITH t AS (SELECT proxy.*, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id GROUP BY proxy.proxy_id) SELECT * FROM  (TABLE  t OFFSET $1 LIMIT  $2) sub RIGHT JOIN (SELECT count(*) FROM t) AS c(total) ON TRUE;"
 	rows, _ := p.connPool.Query(ctx, q, offset, limit)
@@ -70,34 +114,6 @@ func (p PostgresProxyRepository) GetProxyList(ctx context.Context, offset int64,
 		})
 	}
 	return proxyList, nil
-}
-
-func (p PostgresProxyRepository) GetProxy(ctx context.Context, proxyId int64) (domain.Proxy, error) {
-	q := "SELECT proxy.*, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id WHERE proxy.proxy_id = $1 GROUP BY proxy.proxy_id;"
-	rows, _ := p.connPool.Query(ctx, q, proxyId)
-
-	proxy, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[domain.Proxy])
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.Proxy{}, usecase.ErrNotFound
-		}
-		return domain.Proxy{}, err
-	}
-	return *proxy, nil
-}
-
-func (p PostgresProxyRepository) UpdateProxy(ctx context.Context, proxy domain.Proxy) (domain.Proxy, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p PostgresProxyRepository) DeleteProxy(ctx context.Context, proxyId int64) error {
-	q := "DELETE FROM proxy WHERE proxy_id=$1;"
-	_, err := p.connPool.Query(ctx, q, proxyId)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (p PostgresProxyRepository) OccupyMostAvailableProxy(ctx context.Context) (domain.ProxyOccupy, error) {

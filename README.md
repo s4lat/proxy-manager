@@ -14,4 +14,9 @@
 - UPDATE /proxies/:proxy_id - обновление инфы о проксе;
 - DELETE /proxies/:proxy_id - удаление прокси;
 - POST /proxies/occupy - занять свободную проксю;
-- POST /proxies/:proxy_id/release?key=uuid8 - освободить проксю;
+- POST /proxies/release - освободить проксю;
+
+TODO:
+- [ ] Gin логирование;
+- [ ] Swagger;
+- [ ] GRPC;

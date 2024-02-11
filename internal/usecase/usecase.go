@@ -27,7 +27,22 @@ func (u *UseCase) CreateProxy(ctx context.Context, proxy domain.Proxy) (domain.P
 }
 
 func (u *UseCase) UpdateProxy(ctx context.Context, updatedProxy domain.Proxy) (domain.Proxy, error) {
-	panic("implement me")
+	if updatedProxy.Id <= 0 {
+		return domain.Proxy{}, errors.Join(ErrInvalidData, errors.New("ProxyId must be > 0"))
+	}
+
+	if err := updatedProxy.Validate(); err != nil {
+		return domain.Proxy{}, errors.Join(ErrInvalidData, err)
+	}
+
+	proxy, err := u.proxyRepo.UpdateProxy(ctx, updatedProxy)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return domain.Proxy{}, err
+		}
+		return domain.Proxy{}, errors.Join(ErrInRepo, err)
+	}
+	return proxy, nil
 }
 
 func (u *UseCase) DeleteProxy(ctx context.Context, proxyId int64) error {
