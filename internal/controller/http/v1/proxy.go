@@ -29,13 +29,25 @@ func newProxyRoutes(handler *gin.RouterGroup, u usecase.UseCase, l logger.Interf
 }
 
 type createProxyRequest struct {
-	Protocol string `json:"protocol" binding:"required"  example:"http"`
-	Host     string `json:"Host"     binding:"required"  example:"127.0.0.1"`
-	Port     int64  `json:"port"     binding:"required"  example:"8080"`
-	Username string `json:"username" example:"login123"`
-	Password string `json:"password" example:"qwerty1234"`
+	Protocol string `json:"protocol" binding:"required" example:"http"       extensions:"x-order=1"`
+	Host     string `json:"Host"     binding:"required" example:"127.0.0.1"  extensions:"x-order=2"`
+	Port     int64  `json:"port"     binding:"required" example:"8080"       extensions:"x-order=3"`
+	Username string `json:"username"                    example:"login123"   extensions:"x-order=4"`
+	Password string `json:"password"                    example:"qwerty1234" extensions:"x-order=5"`
 }
 
+// createProxy godoc
+//
+//	@Summary		Create proxy
+//	@Description	Creates proxy with given params and returns it
+//	@Tags			proxies
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		createProxyRequest	true	"Create proxy"
+//	@Success		200		{object}	domain.Proxy
+//	@Failure		400		{object}	errResponse
+//	@Failure		500		{object}	errResponse
+//	@Router			/proxies [POST]
 func (u *ProxyRoutes) createProxy(c *gin.Context) {
 	var req createProxyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -68,6 +80,18 @@ type getProxyRequest struct {
 	ProxyId int64 `uri:"proxyId" binding:"required" example:"22"`
 }
 
+// getProxy godoc
+//
+//	@Summary		Get proxy
+//	@Description	Returns proxy with given ID
+//	@Tags			proxies
+//	@Produce		json
+//	@Param			proxyId	path		int64	true	"Proxy ID"
+//	@Success		200		{object}	domain.Proxy
+//	@Failure		400		{object}	errResponse
+//	@Failure		404		{object}	errResponse
+//	@Failure		500		{object}	errResponse
+//	@Router			/proxies/{proxyId} [GET]
 func (u *ProxyRoutes) getProxy(c *gin.Context) {
 	var req getProxyRequest
 	if err := c.ShouldBindUri(&req); err != nil {
@@ -94,13 +118,27 @@ type getProxyBeforeUpdateRequest struct {
 }
 
 type updateProxyRequest struct {
-	Protocol string `json:"protocol" binding:"required"  example:"http"`
-	Host     string `json:"host"     binding:"required"  example:"127.0.0.1"`
-	Port     int64  `json:"port"     binding:"required"  example:"8080"`
-	Username string `json:"username" example:"login123"`
-	Password string `json:"password" example:"qwerty1234"`
+	Protocol string `json:"protocol" binding:"required" example:"http"       extensions:"x-order=1"`
+	Host     string `json:"host"     binding:"required" example:"127.0.0.1"  extensions:"x-order=2"`
+	Port     int64  `json:"port"     binding:"required" example:"8080"       extensions:"x-order=3"`
+	Username string `json:"username"                    example:"login123"   extensions:"x-order=4"`
+	Password string `json:"password"                    example:"qwerty1234" extensions:"x-order=5"`
 }
 
+// updateProxy godoc
+//
+//	@Summary		Update proxy
+//	@Description	Updates proxy with given ID
+//	@Tags			proxies
+//	@Accept			json
+//	@Produce		json
+//	@Param			proxyId	path		int64				true	"Proxy ID"
+//	@Param			request	body		updateProxyRequest	true	"Proxy data"
+//	@Success		200		{object}	domain.Proxy
+//	@Failure		400		{object}	errResponse
+//	@Failure		404		{object}	errResponse
+//	@Failure		500		{object}	errResponse
+//	@Router			/proxies/{proxyId} [PUT]
 func (u *ProxyRoutes) updateProxy(c *gin.Context) {
 	var getProxyReq getProxyBeforeUpdateRequest
 	if err := c.ShouldBindUri(&getProxyReq); err != nil {
@@ -140,6 +178,17 @@ type deleteProxyRequest struct {
 	ProxyId int64 `uri:"proxyId" binding:"required" example:"22"`
 }
 
+// deleteProxy godoc
+//
+//	@Summary		Delete proxy
+//	@Description	Deletes proxy with given ID
+//	@Tags			proxies
+//	@Produce		json
+//	@Param			proxyId	path	int64	true	"Proxy ID"
+//	@Success		204		"No content"
+//	@Failure		400		{object}	errResponse
+//	@Failure		500		{object}	errResponse
+//	@Router			/proxies/{proxyId} [DELETE]
 func (u *ProxyRoutes) deleteProxy(c *gin.Context) {
 	var req deleteProxyRequest
 	if err := c.ShouldBindUri(&req); err != nil {
@@ -160,6 +209,18 @@ type getProxyListRequest struct {
 	Limit  int64 `form:"limit,default=20" example:"50"`
 }
 
+// getProxyList godoc
+//
+//	@Summary		Get proxy list
+//	@Description	Returns proxy list
+//	@Tags			proxies
+//	@Produce		json
+//	@Param			offset	query		int64	false	"Offset in proxy list"
+//	@Param			limit	query		int64	false	"Limit of proxy list size"
+//	@Success		200		{object}	domain.ProxyList
+//	@Failure		400		{object}	errResponse
+//	@Failure		500		{object}	errResponse
+//	@Router			/proxies [GET]
 func (u *ProxyRoutes) getProxyList(c *gin.Context) {
 	var req getProxyListRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -185,6 +246,17 @@ func (u *ProxyRoutes) getProxyList(c *gin.Context) {
 	c.JSON(http.StatusOK, proxyList)
 }
 
+// occupyMostAvailableProxy godoc
+//
+//	@Summary		Occupy most available proxy
+//	@Description	Occupies the most available proxy, returns its info and key to release
+//	@Tags			proxies
+//	@Produce		json
+//	@Success		200	{object}	domain.ProxyOccupy
+//	@Failure		400	{object}	errResponse
+//	@Failure		404	{object}	errResponse
+//	@Failure		500	{object}	errResponse
+//	@Router			/proxies/occupy [POST]
 func (u *ProxyRoutes) occupyMostAvailableProxy(c *gin.Context) {
 	proxyOccupy, err := u.u.OccupyMostAvailableProxy(c)
 	if err != nil {
@@ -204,6 +276,18 @@ type releaseProxyRequest struct {
 	Key string `json:"key" binding:"required" example:"91af856e-f788-4e83-908e-153399961f35"`
 }
 
+// releaseProxy godoc
+//
+//	@Summary		Release proxy occupy
+//	@Description	Releases proxy occupy with given key
+//	@Tags			proxies
+//	@Produce		json
+//	@Accept			json
+//	@Param			key	body	releaseProxyRequest	true	"Key of occupy"
+//	@Success		204	"No content"
+//	@Failure		400	{object}	errResponse
+//	@Failure		500	{object}	errResponse
+//	@Router			/proxies/release [POST]
 func (u *ProxyRoutes) releaseProxy(c *gin.Context) {
 	var req releaseProxyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

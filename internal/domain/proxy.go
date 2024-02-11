@@ -8,24 +8,24 @@ import (
 )
 
 type Proxy struct {
-	Id            int64  `json:"proxy_id" db:"proxy_id"`
-	Protocol      string `json:"protocol" db:"protocol"`
-	Username      string `json:"username" db:"username"`
-	Password      string `json:"password" db:"password"`
-	Host          string `json:"host" db:"host"`
-	Port          int64  `json:"port" db:"port"`
-	OccupiesCount int64  `json:"occupies_count" db:"occupies_count"`
+	Id            int64  `json:"proxy_id"       db:"proxy_id"       extensions:"x-order=1"`
+	Protocol      string `json:"protocol"       db:"protocol"       extensions:"x-order=2"`
+	Username      string `json:"username"       db:"username"       extensions:"x-order=3"`
+	Password      string `json:"password"       db:"password"       extensions:"x-order=4"`
+	Host          string `json:"host"           db:"host"           extensions:"x-order=5"`
+	Port          int64  `json:"port"           db:"port"           extensions:"x-order=6"`
+	OccupiesCount int64  `json:"occupies_count" db:"occupies_count" extensions:"x-order=7"`
 }
 
 type ProxyList struct {
-	Proxies []Proxy `json:"proxies"`
-	Offset  int64   `json:"offset"`
-	Total   int64   `json:"total"`
+	Proxies []Proxy `json:"proxies" extensions:"x-order=1"`
+	Offset  int64   `json:"offset"  extensions:"x-order=2"`
+	Total   int64   `json:"total"   extensions:"x-order=3"`
 }
 
 type ProxyOccupy struct {
-	Proxy Proxy  `json:"proxy"`
-	Key   string `json:"key"`
+	Proxy Proxy  `json:"proxy" extensions:"x-order=1"`
+	Key   string `json:"key"   extensions:"x-order=2"`
 }
 
 type ProxyRepository interface {

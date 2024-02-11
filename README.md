@@ -6,7 +6,7 @@
 - Отдает список проксей;
 - Контролирует сколько клиентов на данный момент использует конкретную проксю;
 
-Методы:
+Методы /api/v1:
 - GET /proxies - возвращает список проксей:
     - Пагинация с помощью параметров offset и limit;
 - POST /proxies - добавляет новую проксю;
@@ -16,7 +16,9 @@
 - POST /proxies/occupy - занять свободную проксю;
 - POST /proxies/release - освободить проксю;
 
+На /api/v1/swagger/index.html есть swagger.
+
 TODO:
 - [ ] Gin логирование;
-- [ ] Swagger;
 - [ ] GRPC;
+- [ ] Dockerfile && docker-compose.yaml

@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type response struct {
+type errResponse struct {
 	Error string `json:"error" example:"message"`
 }
 
 func errorResponse(c *gin.Context, code int, msg string) {
-	c.AbortWithStatusJSON(code, response{msg})
+	c.AbortWithStatusJSON(code, errResponse{msg})
 }
