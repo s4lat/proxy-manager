@@ -7,6 +7,7 @@ import (
 	"proxy_manager/internal/domain"
 	"proxy_manager/internal/usecase"
 	"proxy_manager/pkg/logger"
+	"time"
 )
 
 type ProxyRoutes struct {
@@ -29,11 +30,12 @@ func newProxyRoutes(handler *gin.RouterGroup, u usecase.UseCase, l logger.Interf
 }
 
 type createProxyRequest struct {
-	Protocol string `json:"protocol" binding:"required" example:"http"       extensions:"x-order=1"`
-	Host     string `json:"Host"     binding:"required" example:"127.0.0.1"  extensions:"x-order=2"`
-	Port     int64  `json:"port"     binding:"required" example:"8080"       extensions:"x-order=3"`
-	Username string `json:"username"                    example:"login123"   extensions:"x-order=4"`
-	Password string `json:"password"                    example:"qwerty1234" extensions:"x-order=5"`
+	Protocol       string    `json:"protocol"       binding:"required" example:"http"                     extensions:"x-order=1"`
+	Host           string    `json:"Host"           binding:"required" example:"127.0.0.1"                extensions:"x-order=2"`
+	Port           int64     `json:"port"           binding:"required" example:"8080"                     extensions:"x-order=3"`
+	Username       string    `json:"username"                          example:"login123"                 extensions:"x-order=4"`
+	Password       string    `json:"password"                          example:"qwerty1234"               extensions:"x-order=5"`
+	ExpirationDate time.Time `json:"expirationDate" binding:"required" example:"2025-02-18T21:54:42.123Z" extensions:"x-order=6"`
 }
 
 // createProxy godoc
@@ -57,11 +59,12 @@ func (u *ProxyRoutes) createProxy(c *gin.Context) {
 	}
 
 	createdProxy, err := u.u.CreateProxy(c, domain.Proxy{
-		Protocol: req.Protocol,
-		Username: req.Username,
-		Password: req.Password,
-		Host:     req.Host,
-		Port:     req.Port,
+		Protocol:       req.Protocol,
+		Username:       req.Username,
+		Password:       req.Password,
+		Host:           req.Host,
+		Port:           req.Port,
+		ExpirationDate: req.ExpirationDate,
 	})
 	if err != nil {
 		u.l.Error("http - v1 - createProxy - %s", err)
@@ -118,11 +121,12 @@ type getProxyBeforeUpdateRequest struct {
 }
 
 type updateProxyRequest struct {
-	Protocol string `json:"protocol" binding:"required" example:"http"       extensions:"x-order=1"`
-	Host     string `json:"host"     binding:"required" example:"127.0.0.1"  extensions:"x-order=2"`
-	Port     int64  `json:"port"     binding:"required" example:"8080"       extensions:"x-order=3"`
-	Username string `json:"username"                    example:"login123"   extensions:"x-order=4"`
-	Password string `json:"password"                    example:"qwerty1234" extensions:"x-order=5"`
+	Protocol       string    `json:"protocol"       binding:"required" example:"http"                     extensions:"x-order=1"`
+	Host           string    `json:"host"           binding:"required" example:"127.0.0.1"                extensions:"x-order=2"`
+	Port           int64     `json:"port"           binding:"required" example:"8080"                     extensions:"x-order=3"`
+	Username       string    `json:"username"                          example:"login123"                 extensions:"x-order=4"`
+	Password       string    `json:"password"                          example:"qwerty1234"               extensions:"x-order=5"`
+	ExpirationDate time.Time `json:"expirationDate" binding:"required" example:"2025-02-18T21:54:42.123Z" extensions:"x-order=7"`
 }
 
 // updateProxy godoc
@@ -155,12 +159,13 @@ func (u *ProxyRoutes) updateProxy(c *gin.Context) {
 	}
 
 	updatedProxy, err := u.u.UpdateProxy(c, domain.Proxy{
-		Id:       getProxyReq.ProxyId,
-		Protocol: updateProxyReq.Protocol,
-		Username: updateProxyReq.Username,
-		Password: updateProxyReq.Password,
-		Host:     updateProxyReq.Host,
-		Port:     updateProxyReq.Port,
+		Id:             getProxyReq.ProxyId,
+		Protocol:       updateProxyReq.Protocol,
+		Username:       updateProxyReq.Username,
+		Password:       updateProxyReq.Password,
+		Host:           updateProxyReq.Host,
+		Port:           updateProxyReq.Port,
+		ExpirationDate: updateProxyReq.ExpirationDate,
 	})
 	if err != nil {
 		u.l.Error("http - v1 - updateProxy - %s", err)

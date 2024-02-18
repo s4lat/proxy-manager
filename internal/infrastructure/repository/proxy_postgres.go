@@ -29,8 +29,8 @@ func NewPostgresProxyRepository(ctx context.Context, connPool *pgxpool.Pool, occ
 }
 
 func (p PostgresProxyRepository) CreateProxy(ctx context.Context, proxy domain.Proxy) (domain.Proxy, error) {
-	q := "INSERT INTO proxy(protocol, username, password, host, port) VALUES ($1, $2, $3, $4, $5) RETURNING *, 0 as occupies_count;"
-	rows, _ := p.connPool.Query(ctx, q, proxy.Protocol, proxy.Username, proxy.Password, proxy.Host, proxy.Port)
+	q := "INSERT INTO proxy(protocol, username, password, host, port, expiration_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *, (proxy.expiration_date > now() - INTERVAL '1 hour') AS enabled, 0 as occupies_count;"
+	rows, _ := p.connPool.Query(ctx, q, proxy.Protocol, proxy.Username, proxy.Password, proxy.Host, proxy.Port, proxy.ExpirationDate)
 
 	createdProxy, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[domain.Proxy])
 	if err != nil {
@@ -40,7 +40,7 @@ func (p PostgresProxyRepository) CreateProxy(ctx context.Context, proxy domain.P
 }
 
 func (p PostgresProxyRepository) GetProxy(ctx context.Context, proxyId int64) (domain.Proxy, error) {
-	q := "SELECT proxy.*, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id WHERE proxy.proxy_id = $1 GROUP BY proxy.proxy_id;"
+	q := "SELECT proxy.*, (proxy.expiration_date > now() - INTERVAL '1 hour') AS enabled, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id WHERE proxy.proxy_id = $1 GROUP BY proxy.proxy_id;"
 	rows, _ := p.connPool.Query(ctx, q, proxyId)
 
 	proxy, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[domain.Proxy])
@@ -54,10 +54,10 @@ func (p PostgresProxyRepository) GetProxy(ctx context.Context, proxyId int64) (d
 }
 
 func (p PostgresProxyRepository) UpdateProxy(ctx context.Context, proxy domain.Proxy) (domain.Proxy, error) {
-	q1 := "UPDATE proxy SET protocol = $2, username = $3, password = $4,  host = $5, port = $6 WHERE proxy_id = $1 RETURNING *, 0 as occupies_count;"
+	q1 := "UPDATE proxy SET protocol = $2, username = $3, password = $4,  host = $5, port = $6, expiration_date = $7 WHERE proxy_id = $1 RETURNING *, (proxy.expiration_date > now() - INTERVAL '1 hour') AS enabled, 0 as occupies_count;"
 	q2 := "DELETE FROM proxy_occupy WHERE proxy_id = $1;"
 
-	rows, _ := p.connPool.Query(ctx, q1, proxy.Id, proxy.Protocol, proxy.Username, proxy.Password, proxy.Host, proxy.Port)
+	rows, _ := p.connPool.Query(ctx, q1, proxy.Id, proxy.Protocol, proxy.Username, proxy.Password, proxy.Host, proxy.Port, proxy.ExpirationDate)
 	updatedProxy, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[domain.Proxy])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -84,7 +84,7 @@ func (p PostgresProxyRepository) DeleteProxy(ctx context.Context, proxyId int64)
 }
 
 func (p PostgresProxyRepository) GetProxyList(ctx context.Context, offset int64, limit int64) (domain.ProxyList, error) {
-	q := "WITH t AS (SELECT proxy.*, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id GROUP BY proxy.proxy_id) SELECT * FROM  (TABLE  t OFFSET $1 LIMIT  $2) sub RIGHT JOIN (SELECT count(*) FROM t) AS c(total) ON TRUE;"
+	q := "WITH t AS (SELECT proxy.*, (proxy.expiration_date > now() - INTERVAL '1 hour') AS enabled, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id GROUP BY proxy.proxy_id) SELECT * FROM  (TABLE  t OFFSET $1 LIMIT  $2) sub RIGHT JOIN (SELECT count(*) FROM t) AS c(total) ON TRUE;"
 	rows, _ := p.connPool.Query(ctx, q, offset, limit)
 	rowsAsMap, err := pgx.CollectRows(rows, pgx.RowToMap)
 	if err != nil {
@@ -104,20 +104,22 @@ func (p PostgresProxyRepository) GetProxyList(ctx context.Context, offset int64,
 
 	for _, row := range rowsAsMap {
 		proxyList.Proxies = append(proxyList.Proxies, domain.Proxy{
-			Id:            row["proxy_id"].(int64),
-			Protocol:      row["protocol"].(string),
-			Host:          row["host"].(string),
-			Port:          row["port"].(int64),
-			Username:      row["username"].(string),
-			Password:      row["password"].(string),
-			OccupiesCount: row["occupies_count"].(int64),
+			Id:             row["proxy_id"].(int64),
+			Protocol:       row["protocol"].(string),
+			Host:           row["host"].(string),
+			Port:           row["port"].(int64),
+			Username:       row["username"].(string),
+			Password:       row["password"].(string),
+			ExpirationDate: row["expiration_date"].(time.Time),
+			Enabled:        row["enabled"].(bool),
+			OccupiesCount:  row["occupies_count"].(int64),
 		})
 	}
 	return proxyList, nil
 }
 
 func (p PostgresProxyRepository) OccupyMostAvailableProxy(ctx context.Context) (domain.ProxyOccupy, error) {
-	selectQuery := "SELECT proxy.*, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id GROUP BY proxy.proxy_id ORDER BY occupies_count ASC LIMIT 1;"
+	selectQuery := "SELECT proxy.*, (proxy.expiration_date > now() - INTERVAL '1 hour') AS enabled, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id WHERE expiration_date > now() - INTERVAL '1 hour' GROUP BY proxy.proxy_id ORDER BY occupies_count ASC LIMIT 1;"
 	occupyQuery := "INSERT INTO proxy_occupy(proxy_id, create_timestamp) VALUES($1, EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)) RETURNING *;"
 
 	tx, err := p.connPool.Begin(ctx)

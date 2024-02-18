@@ -15,6 +15,8 @@ func New(proxyRepo domain.ProxyRepository) UseCase {
 }
 
 func (u *UseCase) CreateProxy(ctx context.Context, proxy domain.Proxy) (domain.Proxy, error) {
+	proxy.ExpirationDate = proxy.ExpirationDate.UTC()
+
 	if err := proxy.Validate(); err != nil {
 		return domain.Proxy{}, errors.Join(ErrInvalidData, err)
 	}
@@ -27,6 +29,8 @@ func (u *UseCase) CreateProxy(ctx context.Context, proxy domain.Proxy) (domain.P
 }
 
 func (u *UseCase) UpdateProxy(ctx context.Context, updatedProxy domain.Proxy) (domain.Proxy, error) {
+	updatedProxy.ExpirationDate = updatedProxy.ExpirationDate.UTC()
+
 	if updatedProxy.Id <= 0 {
 		return domain.Proxy{}, errors.Join(ErrInvalidData, errors.New("ProxyId must be > 0"))
 	}

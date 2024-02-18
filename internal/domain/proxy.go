@@ -5,16 +5,19 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 )
 
 type Proxy struct {
-	Id            int64  `json:"proxy_id"       db:"proxy_id"       extensions:"x-order=1"`
-	Protocol      string `json:"protocol"       db:"protocol"       extensions:"x-order=2"`
-	Username      string `json:"username"       db:"username"       extensions:"x-order=3"`
-	Password      string `json:"password"       db:"password"       extensions:"x-order=4"`
-	Host          string `json:"host"           db:"host"           extensions:"x-order=5"`
-	Port          int64  `json:"port"           db:"port"           extensions:"x-order=6"`
-	OccupiesCount int64  `json:"occupies_count" db:"occupies_count" extensions:"x-order=7"`
+	Id             int64     `json:"proxy_id"           db:"proxy_id"        extensions:"x-order=1"`
+	Protocol       string    `json:"protocol"           db:"protocol"        extensions:"x-order=2"`
+	Username       string    `json:"username"           db:"username"        extensions:"x-order=3"`
+	Password       string    `json:"password"           db:"password"        extensions:"x-order=4"`
+	Host           string    `json:"host"               db:"host"            extensions:"x-order=5"`
+	Port           int64     `json:"port"               db:"port"            extensions:"x-order=6"`
+	OccupiesCount  int64     `json:"occupies_count"     db:"occupies_count"  extensions:"x-order=7"`
+	ExpirationDate time.Time `json:"expiration_date"    db:"expiration_date" extensions:"x-order=7"`
+	Enabled        bool      `json:"enabled"            db:"enabled"         extensions:"x-order=8"`
 }
 
 type ProxyList struct {

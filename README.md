@@ -22,3 +22,14 @@ TODO:
 - [ ] Gin логирование;
 - [ ] GRPC;
 - [ ] Dockerfile && docker-compose.yaml
+- [ ] ProxyCheck, на уровне repo
+- [ ] фильтр на GetProxyList{enabled=[true, false]}
+# cmds
+## migrate
+```
+migrate -database postgresql://login:pass@ip:port/db?sslmode=disable -path=. up/down/force
+```
+## swag
+```
+swag init -g internal/controller/http/v1/router.go
+```

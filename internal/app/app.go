@@ -33,6 +33,10 @@ func Run(cfg *config.Config) {
 	u := usecase.New(proxyRepo)
 
 	handler := gin.New()
+	//gin.DebugPrintRouteFunc = func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
+	//	l.Info("endpoint %v %v %v %v\n", httpMethod, absolutePath, handlerName, nuHandlers)
+	//}
+
 	v1.NewRouter(handler, u, l)
 	httpServer := serveHttpInBackground(errorChan, handler, fmt.Sprintf(":%s", cfg.HttpPort))
 

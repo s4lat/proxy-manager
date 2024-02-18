@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS proxy(
     username VARCHAR(255),
     password VARCHAR(255),
     host VARCHAR(255),
-    port BIGINT
+    port BIGINT,
+    expiration_date timestamp
 );
 
 CREATE TABLE IF NOT EXISTS proxy_occupy (
