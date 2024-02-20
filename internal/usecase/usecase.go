@@ -31,8 +31,8 @@ func (u *UseCase) CreateProxy(ctx context.Context, proxy domain.Proxy) (domain.P
 func (u *UseCase) UpdateProxy(ctx context.Context, updatedProxy domain.Proxy) (domain.Proxy, error) {
 	updatedProxy.ExpirationDate = updatedProxy.ExpirationDate.UTC()
 
-	if updatedProxy.Id <= 0 {
-		return domain.Proxy{}, errors.Join(ErrInvalidData, errors.New("ProxyId must be > 0"))
+	if updatedProxy.ID <= 0 {
+		return domain.Proxy{}, errors.Join(ErrInvalidData, errors.New("ProxyID must be > 0"))
 	}
 
 	if err := updatedProxy.Validate(); err != nil {
@@ -49,8 +49,8 @@ func (u *UseCase) UpdateProxy(ctx context.Context, updatedProxy domain.Proxy) (d
 	return proxy, nil
 }
 
-func (u *UseCase) DeleteProxy(ctx context.Context, proxyId int64) error {
-	if err := u.proxyRepo.DeleteProxy(ctx, proxyId); err != nil {
+func (u *UseCase) DeleteProxy(ctx context.Context, proxyID int64) error {
+	if err := u.proxyRepo.DeleteProxy(ctx, proxyID); err != nil {
 		return errors.Join(ErrInRepo, err)
 	}
 	return nil
@@ -68,8 +68,8 @@ func (u *UseCase) GetProxyList(ctx context.Context, offset int64, limit int64) (
 	return proxyList, nil
 }
 
-func (u *UseCase) GetProxy(ctx context.Context, proxyId int64) (domain.Proxy, error) {
-	proxy, err := u.proxyRepo.GetProxy(ctx, proxyId)
+func (u *UseCase) GetProxy(ctx context.Context, proxyID int64) (domain.Proxy, error) {
+	proxy, err := u.proxyRepo.GetProxy(ctx, proxyID)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			return domain.Proxy{}, err

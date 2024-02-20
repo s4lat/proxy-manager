@@ -2,12 +2,13 @@ package v1
 
 import (
 	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"proxy_manager/pkg/logger"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
-// JSONLogMiddleware logs a gin HTTP request in JSON format, with some additional custom key/values
+// JSONLogMiddleware logs a gin HTTP request in JSON format, with some additional custom key/values.
 func JSONLogMiddleware(l logger.Interface) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
@@ -17,7 +18,7 @@ func JSONLogMiddleware(l logger.Interface) gin.HandlerFunc {
 		c.Next()
 
 		// Stop timer
-		duration := time.Now().Sub(start).Milliseconds()
+		duration := time.Since(start).Milliseconds()
 
 		logMsg, err := json.Marshal(map[string]interface{}{
 			"method":   c.Request.Method,

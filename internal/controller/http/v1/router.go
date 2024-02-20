@@ -1,12 +1,13 @@
 package v1
 
 import (
-	"github.com/gin-gonic/gin"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	_ "proxy_manager/docs"
 	"proxy_manager/internal/usecase"
 	"proxy_manager/pkg/logger"
+
+	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // NewRouter godoc

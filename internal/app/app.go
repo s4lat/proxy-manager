@@ -3,8 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +14,9 @@ import (
 	"proxy_manager/pkg/logger"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func Run(cfg *config.Config) {
@@ -29,16 +30,17 @@ func Run(cfg *config.Config) {
 		log.Fatal(err)
 	}
 
-	proxyRepo := repository.NewPostgresProxyRepository(rootCtx, pgxPool, time.Minute*time.Duration(cfg.OccupiesExpireTime), l)
+	proxyRepo := repository.NewPostgresProxyRepository(rootCtx, pgxPool,
+		time.Minute*time.Duration(cfg.OccupiesExpireTime), l)
 	u := usecase.New(proxyRepo)
 
 	handler := gin.New()
 
 	v1.NewRouter(handler, u, l, cfg.ServeSwagger)
-	httpServer := serveHttpInBackground(errorChan, handler, fmt.Sprintf(":%s", cfg.HttpPort))
+	httpServer := serveHTTPInBackground(errorChan, handler, fmt.Sprintf(":%s", cfg.HTTPPort))
 
 	// For graceful shutdown
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	select {
@@ -59,10 +61,11 @@ func Run(cfg *config.Config) {
 	l.Info("httpServer exited!")
 }
 
-func serveHttpInBackground(errorChan chan<- error, handler *gin.Engine, addr string) *http.Server {
+func serveHTTPInBackground(errorChan chan<- error, handler *gin.Engine, addr string) *http.Server {
 	srv := &http.Server{
-		Addr:    addr,
-		Handler: handler,
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: time.Second * 60,
 	}
 
 	go func() {

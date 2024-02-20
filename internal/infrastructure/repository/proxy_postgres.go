@@ -3,13 +3,14 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/gofrs/uuid/v5"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"proxy_manager/internal/domain"
 	"proxy_manager/internal/usecase"
 	"proxy_manager/pkg/logger"
 	"time"
+
+	"github.com/gofrs/uuid/v5"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PostgresProxyRepository struct {
@@ -39,9 +40,9 @@ func (p PostgresProxyRepository) CreateProxy(ctx context.Context, proxy domain.P
 	return *createdProxy, nil
 }
 
-func (p PostgresProxyRepository) GetProxy(ctx context.Context, proxyId int64) (domain.Proxy, error) {
+func (p PostgresProxyRepository) GetProxy(ctx context.Context, proxyID int64) (domain.Proxy, error) {
 	q := "SELECT proxy.*, (proxy.expiration_date > now() - INTERVAL '1 hour') AS enabled, COUNT(proxy_occupy.proxy_id) AS occupies_count FROM proxy LEFT JOIN proxy_occupy ON proxy.proxy_id = proxy_occupy.proxy_id WHERE proxy.proxy_id = $1 GROUP BY proxy.proxy_id;"
-	rows, _ := p.connPool.Query(ctx, q, proxyId)
+	rows, _ := p.connPool.Query(ctx, q, proxyID)
 
 	proxy, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[domain.Proxy])
 	if err != nil {
@@ -57,7 +58,7 @@ func (p PostgresProxyRepository) UpdateProxy(ctx context.Context, proxy domain.P
 	q1 := "UPDATE proxy SET protocol = $2, username = $3, password = $4,  host = $5, port = $6, expiration_date = $7 WHERE proxy_id = $1 RETURNING *, (proxy.expiration_date > now() - INTERVAL '1 hour') AS enabled, 0 as occupies_count;"
 	q2 := "DELETE FROM proxy_occupy WHERE proxy_id = $1;"
 
-	rows, _ := p.connPool.Query(ctx, q1, proxy.Id, proxy.Protocol, proxy.Username, proxy.Password, proxy.Host, proxy.Port, proxy.ExpirationDate)
+	rows, _ := p.connPool.Query(ctx, q1, proxy.ID, proxy.Protocol, proxy.Username, proxy.Password, proxy.Host, proxy.Port, proxy.ExpirationDate)
 	updatedProxy, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByName[domain.Proxy])
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -66,7 +67,7 @@ func (p PostgresProxyRepository) UpdateProxy(ctx context.Context, proxy domain.P
 		return domain.Proxy{}, err
 	}
 
-	_, err = p.connPool.Query(ctx, q2, proxy.Id)
+	_, err = p.connPool.Query(ctx, q2, proxy.ID)
 	if err != nil {
 		return domain.Proxy{}, err
 	}
@@ -74,9 +75,9 @@ func (p PostgresProxyRepository) UpdateProxy(ctx context.Context, proxy domain.P
 	return *updatedProxy, nil
 }
 
-func (p PostgresProxyRepository) DeleteProxy(ctx context.Context, proxyId int64) error {
+func (p PostgresProxyRepository) DeleteProxy(ctx context.Context, proxyID int64) error {
 	q := "DELETE FROM proxy WHERE proxy_id=$1;"
-	_, err := p.connPool.Query(ctx, q, proxyId)
+	_, err := p.connPool.Query(ctx, q, proxyID)
 	if err != nil {
 		return err
 	}
@@ -104,7 +105,7 @@ func (p PostgresProxyRepository) GetProxyList(ctx context.Context, offset int64,
 
 	for _, row := range rowsAsMap {
 		proxyList.Proxies = append(proxyList.Proxies, domain.Proxy{
-			Id:             row["proxy_id"].(int64),
+			ID:             row["proxy_id"].(int64),
 			Protocol:       row["protocol"].(string),
 			Host:           row["host"].(string),
 			Port:           row["port"].(int64),
@@ -143,7 +144,7 @@ func (p PostgresProxyRepository) OccupyMostAvailableProxy(ctx context.Context) (
 		return domain.ProxyOccupy{}, err
 	}
 
-	rows, _ = tx.Query(ctx, occupyQuery, proxy.Id)
+	rows, _ = tx.Query(ctx, occupyQuery, proxy.ID)
 	occupyRowMap, err := pgx.CollectOneRow(rows, pgx.RowToMap)
 	if err != nil {
 		return domain.ProxyOccupy{}, err

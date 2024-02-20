@@ -33,3 +33,8 @@ migrate -database postgresql://login:pass@ip:port/db?sslmode=disable -path ./mig
 ```
 swag init -g internal/controller/http/v1/router.go
 ```
+
+## golangci-lint
+```
+golangci-lint run
+```

@@ -9,7 +9,7 @@ import (
 )
 
 type Proxy struct {
-	Id             int64     `json:"proxy_id"           db:"proxy_id"        extensions:"x-order=1"`
+	ID             int64     `json:"proxy_id"           db:"proxy_id"        extensions:"x-order=1"`
 	Protocol       string    `json:"protocol"           db:"protocol"        extensions:"x-order=2"`
 	Username       string    `json:"username"           db:"username"        extensions:"x-order=3"`
 	Password       string    `json:"password"           db:"password"        extensions:"x-order=4"`
@@ -33,9 +33,9 @@ type ProxyOccupy struct {
 
 type ProxyRepository interface {
 	CreateProxy(ctx context.Context, proxy Proxy) (Proxy, error)
-	GetProxy(ctx context.Context, proxyId int64) (Proxy, error)
+	GetProxy(ctx context.Context, proxyID int64) (Proxy, error)
 	UpdateProxy(ctx context.Context, updatedProxy Proxy) (Proxy, error)
-	DeleteProxy(ctx context.Context, proxyId int64) error
+	DeleteProxy(ctx context.Context, proxyID int64) error
 
 	GetProxyList(ctx context.Context, offset int64, limit int64) (ProxyList, error)
 

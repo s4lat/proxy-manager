@@ -2,12 +2,13 @@ package v1
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"proxy_manager/internal/domain"
 	"proxy_manager/internal/usecase"
 	"proxy_manager/pkg/logger"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type ProxyRoutes struct {
@@ -19,9 +20,9 @@ func newProxyRoutes(handler *gin.RouterGroup, u usecase.UseCase, l logger.Interf
 	r := &ProxyRoutes{u: u, l: l}
 
 	handler.POST("/proxies", r.createProxy)
-	handler.GET("/proxies/:proxyId", r.getProxy)
-	handler.PUT("/proxies/:proxyId", r.updateProxy)
-	handler.DELETE("/proxies/:proxyId", r.deleteProxy)
+	handler.GET("/proxies/:proxyID", r.getProxy)
+	handler.PUT("/proxies/:proxyID", r.updateProxy)
+	handler.DELETE("/proxies/:proxyID", r.deleteProxy)
 
 	handler.GET("/proxies", r.getProxyList)
 
@@ -80,7 +81,7 @@ func (u *ProxyRoutes) createProxy(c *gin.Context) {
 }
 
 type getProxyRequest struct {
-	ProxyId int64 `uri:"proxyId" binding:"required" example:"22"`
+	ProxyID int64 `uri:"proxyID" binding:"required" example:"22"`
 }
 
 // getProxy godoc
@@ -89,12 +90,12 @@ type getProxyRequest struct {
 //	@Description	Returns proxy with given ID
 //	@Tags			proxies
 //	@Produce		json
-//	@Param			proxyId	path		int64	true	"Proxy ID"
+//	@Param			proxyID	path		int64	true	"Proxy ID"
 //	@Success		200		{object}	domain.Proxy
 //	@Failure		400		{object}	errResponse
 //	@Failure		404		{object}	errResponse
 //	@Failure		500		{object}	errResponse
-//	@Router			/proxies/{proxyId} [GET]
+//	@Router			/proxies/{proxyID} [GET]
 func (u *ProxyRoutes) getProxy(c *gin.Context) {
 	var req getProxyRequest
 	if err := c.ShouldBindUri(&req); err != nil {
@@ -103,7 +104,7 @@ func (u *ProxyRoutes) getProxy(c *gin.Context) {
 		return
 	}
 
-	proxy, err := u.u.GetProxy(c, req.ProxyId)
+	proxy, err := u.u.GetProxy(c, req.ProxyID)
 	if err != nil {
 		u.l.Error("http - v1 - getProxy - %s", err)
 		if errors.Is(err, usecase.ErrNotFound) {
@@ -117,7 +118,7 @@ func (u *ProxyRoutes) getProxy(c *gin.Context) {
 }
 
 type getProxyBeforeUpdateRequest struct {
-	ProxyId int64 `uri:"proxyId" binding:"required" example:"22"`
+	ProxyID int64 `uri:"proxyID" binding:"required" example:"22"`
 }
 
 type updateProxyRequest struct {
@@ -136,13 +137,13 @@ type updateProxyRequest struct {
 //	@Tags			proxies
 //	@Accept			json
 //	@Produce		json
-//	@Param			proxyId	path		int64				true	"Proxy ID"
+//	@Param			proxyID	path		int64				true	"Proxy ID"
 //	@Param			request	body		updateProxyRequest	true	"Proxy data"
 //	@Success		200		{object}	domain.Proxy
 //	@Failure		400		{object}	errResponse
 //	@Failure		404		{object}	errResponse
 //	@Failure		500		{object}	errResponse
-//	@Router			/proxies/{proxyId} [PUT]
+//	@Router			/proxies/{proxyID} [PUT]
 func (u *ProxyRoutes) updateProxy(c *gin.Context) {
 	var getProxyReq getProxyBeforeUpdateRequest
 	if err := c.ShouldBindUri(&getProxyReq); err != nil {
@@ -159,7 +160,7 @@ func (u *ProxyRoutes) updateProxy(c *gin.Context) {
 	}
 
 	updatedProxy, err := u.u.UpdateProxy(c, domain.Proxy{
-		Id:             getProxyReq.ProxyId,
+		ID:             getProxyReq.ProxyID,
 		Protocol:       updateProxyReq.Protocol,
 		Username:       updateProxyReq.Username,
 		Password:       updateProxyReq.Password,
@@ -180,7 +181,7 @@ func (u *ProxyRoutes) updateProxy(c *gin.Context) {
 }
 
 type deleteProxyRequest struct {
-	ProxyId int64 `uri:"proxyId" binding:"required" example:"22"`
+	ProxyID int64 `uri:"proxyID" binding:"required" example:"22"`
 }
 
 // deleteProxy godoc
@@ -189,11 +190,11 @@ type deleteProxyRequest struct {
 //	@Description	Deletes proxy with given ID
 //	@Tags			proxies
 //	@Produce		json
-//	@Param			proxyId	path	int64	true	"Proxy ID"
+//	@Param			proxyID	path	int64	true	"Proxy ID"
 //	@Success		204		"No content"
 //	@Failure		400		{object}	errResponse
 //	@Failure		500		{object}	errResponse
-//	@Router			/proxies/{proxyId} [DELETE]
+//	@Router			/proxies/{proxyID} [DELETE]
 func (u *ProxyRoutes) deleteProxy(c *gin.Context) {
 	var req deleteProxyRequest
 	if err := c.ShouldBindUri(&req); err != nil {
@@ -202,7 +203,7 @@ func (u *ProxyRoutes) deleteProxy(c *gin.Context) {
 		return
 	}
 
-	if err := u.u.DeleteProxy(c, req.ProxyId); err != nil {
+	if err := u.u.DeleteProxy(c, req.ProxyID); err != nil {
 		u.l.Error("http - v1 - deleteProxy - %s", err)
 		errorResponse(c, http.StatusInternalServerError, "internal server error")
 	}

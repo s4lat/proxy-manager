@@ -1,12 +1,13 @@
 package config
 
 import (
-	"github.com/ilyakaznacheev/cleanenv"
 	"log"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
-	HttpPort string `env:"HTTP_PORT" env-default:"9000"`
+	HTTPPort string `env:"HTTP_PORT" env-default:"9000"`
 
 	PostgresURL     string `env:"PG_URL" env-required:"true"`
 	PostgresMaxCons int    `env:"PG_MAX_CONS" env-default:"15"`
