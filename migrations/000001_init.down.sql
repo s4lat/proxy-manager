@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS proxy_occupy;
+DROP TABLE IF EXISTS proxy;
