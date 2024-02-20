@@ -34,7 +34,7 @@ func Run(cfg *config.Config) {
 
 	handler := gin.New()
 
-	v1.NewRouter(handler, u, l)
+	v1.NewRouter(handler, u, l, cfg.ServeSwagger)
 	httpServer := serveHttpInBackground(errorChan, handler, fmt.Sprintf(":%s", cfg.HttpPort))
 
 	// For graceful shutdown

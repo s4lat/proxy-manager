@@ -13,7 +13,8 @@ type Config struct {
 
 	OccupiesExpireTime int `env:"OCCUPIES_EXPIRE_TIME" env-default:"5"`
 
-	LogLevel string `env:"LOG_LEVEL" env-default:"info"`
+	ServeSwagger bool   `env:"SERVE_SWAGGER" env-default:"true"`
+	LogLevel     string `env:"LOG_LEVEL"     env-default:"info"`
 
 	initialized bool
 }

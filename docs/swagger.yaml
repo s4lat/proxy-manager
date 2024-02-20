@@ -1,0 +1,347 @@
+basePath: /api/v1
+definitions:
+  domain.Proxy:
+    properties:
+      enabled:
+        type: boolean
+        x-order: "8"
+      expiration_date:
+        type: string
+        x-order: "7"
+      host:
+        type: string
+        x-order: "5"
+      occupies_count:
+        type: integer
+        x-order: "7"
+      password:
+        type: string
+        x-order: "4"
+      port:
+        type: integer
+        x-order: "6"
+      protocol:
+        type: string
+        x-order: "2"
+      proxy_id:
+        type: integer
+        x-order: "1"
+      username:
+        type: string
+        x-order: "3"
+    type: object
+  domain.ProxyList:
+    properties:
+      offset:
+        type: integer
+        x-order: "2"
+      proxies:
+        items:
+          $ref: '#/definitions/domain.Proxy'
+        type: array
+        x-order: "1"
+      total:
+        type: integer
+        x-order: "3"
+    type: object
+  domain.ProxyOccupy:
+    properties:
+      key:
+        type: string
+        x-order: "2"
+      proxy:
+        allOf:
+        - $ref: '#/definitions/domain.Proxy'
+        x-order: "1"
+    type: object
+  v1.createProxyRequest:
+    properties:
+      Host:
+        example: 127.0.0.1
+        type: string
+        x-order: "2"
+      expirationDate:
+        example: "2025-02-18T21:54:42.123Z"
+        type: string
+        x-order: "6"
+      password:
+        example: qwerty1234
+        type: string
+        x-order: "5"
+      port:
+        example: 8080
+        type: integer
+        x-order: "3"
+      protocol:
+        example: http
+        type: string
+        x-order: "1"
+      username:
+        example: login123
+        type: string
+        x-order: "4"
+    required:
+    - Host
+    - expirationDate
+    - port
+    - protocol
+    type: object
+  v1.errResponse:
+    properties:
+      error:
+        example: message
+        type: string
+    type: object
+  v1.releaseProxyRequest:
+    properties:
+      key:
+        example: 91af856e-f788-4e83-908e-153399961f35
+        type: string
+    required:
+    - key
+    type: object
+  v1.updateProxyRequest:
+    properties:
+      expirationDate:
+        example: "2025-02-18T21:54:42.123Z"
+        type: string
+        x-order: "7"
+      host:
+        example: 127.0.0.1
+        type: string
+        x-order: "2"
+      password:
+        example: qwerty1234
+        type: string
+        x-order: "5"
+      port:
+        example: 8080
+        type: integer
+        x-order: "3"
+      protocol:
+        example: http
+        type: string
+        x-order: "1"
+      username:
+        example: login123
+        type: string
+        x-order: "4"
+    required:
+    - expirationDate
+    - host
+    - port
+    - protocol
+    type: object
+info:
+  contact: {}
+  description: Proxy Manager API documentation
+  title: Proxy Manager API
+  version: "1.0"
+paths:
+  /proxies:
+    get:
+      description: Returns proxy list
+      parameters:
+      - description: Offset in proxy list
+        in: query
+        name: offset
+        type: integer
+      - description: Limit of proxy list size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ProxyList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+      summary: Get proxy list
+      tags:
+      - proxies
+    post:
+      consumes:
+      - application/json
+      description: Creates proxy with given params and returns it
+      parameters:
+      - description: Create proxy
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.createProxyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Proxy'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+      summary: Create proxy
+      tags:
+      - proxies
+  /proxies/{proxyId}:
+    delete:
+      description: Deletes proxy with given ID
+      parameters:
+      - description: Proxy ID
+        in: path
+        name: proxyId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+      summary: Delete proxy
+      tags:
+      - proxies
+    get:
+      description: Returns proxy with given ID
+      parameters:
+      - description: Proxy ID
+        in: path
+        name: proxyId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Proxy'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+      summary: Get proxy
+      tags:
+      - proxies
+    put:
+      consumes:
+      - application/json
+      description: Updates proxy with given ID
+      parameters:
+      - description: Proxy ID
+        in: path
+        name: proxyId
+        required: true
+        type: integer
+      - description: Proxy data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.updateProxyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Proxy'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+      summary: Update proxy
+      tags:
+      - proxies
+  /proxies/occupy:
+    post:
+      description: Occupies the most available proxy, returns its info and key to
+        release
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ProxyOccupy'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+      summary: Occupy most available proxy
+      tags:
+      - proxies
+  /proxies/release:
+    post:
+      consumes:
+      - application/json
+      description: Releases proxy occupy with given key
+      parameters:
+      - description: Key of occupy
+        in: body
+        name: key
+        required: true
+        schema:
+          $ref: '#/definitions/v1.releaseProxyRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.errResponse'
+      summary: Release proxy occupy
+      tags:
+      - proxies
+swagger: "2.0"
