@@ -17,7 +17,7 @@ import (
 //	@version		1.0
 //	@BasePath		/api/v1
 func NewRouter(handler *gin.Engine, u usecase.UseCase, l logger.Interface) {
-	handler.Use(gin.Logger())
+	handler.Use(JSONLogMiddleware(l))
 	handler.Use(gin.Recovery())
 
 	h := handler.Group("/api/v1")

@@ -1,0 +1,31 @@
+version: "3.0"
+
+services:
+  proxy_manager:
+    build: .
+    container_name: proxy_manager
+    environment:
+      - HTTP_PORT=9000
+      - PG_URL=postgres://proxyManager:proxyManager@pm_postgres:5432/proxyManager
+      - PG_MAX_CONS=15 # max size for postgresql connection pool
+      - OCCUPIES_EXPIRE_TIME=5 # proxy occupy max lifetime in minutes;
+      - LOG_LEVEL=info # error/warn/info/debug
+
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+
+  pm_postgres:
+    image: postgres:13.3
+    container_name: proxy_manager_postgres
+    environment:
+      POSTGRES_DB: "proxyManager"
+      POSTGRES_USER: "proxyManager"
+      POSTGRES_PASSWORD: "proxyManager"
+
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./tmp/postgres_data:/var/lib/postgresql/data
+      - ./migrations/000001_init.up.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped

@@ -14,12 +14,19 @@ type Config struct {
 	OccupiesExpireTime int `env:"OCCUPIES_EXPIRE_TIME" env-default:"5"`
 
 	LogLevel string `env:"LOG_LEVEL" env-default:"info"`
+
+	initialized bool
 }
 
+var config Config
+
 func NewConfig() Config {
-	var cfg Config
-	if err := cleanenv.ReadEnv(&cfg); err != nil {
+	if config.initialized {
+		return config
+	}
+
+	if err := cleanenv.ReadEnv(&config); err != nil {
 		log.Fatal(err)
 	}
-	return cfg
+	return config
 }

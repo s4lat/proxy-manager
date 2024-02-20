@@ -27,7 +27,7 @@ TODO:
 # cmds
 ## migrate
 ```
-migrate -database postgresql://login:pass@ip:port/db?sslmode=disable -path=. up/down/force
+migrate -database postgresql://login:pass@ip:port/db?sslmode=disable -path ./migrations up/down/force
 ```
 ## swag
 ```
